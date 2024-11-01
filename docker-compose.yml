@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  mysql:  # Changed service name from 'db' to 'mysql'
+    image: mysql:8.0
+    container_name: mysql-treading
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=2002
+      - MYSQL_DATABASE=treading
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - 3307:3306
+    volumes:
+      - mysql-treading-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p2002"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - treading-network
+
+  treading-app:
+    build: 
+      context: .
+      dockerfile: DockerFile
+    container_name: treading-plateform
+    ports:
+      - 5454:5454
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/treading  # Changed 'db' to 'mysql'
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=2002
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - treading-network
+
+networks:
+  treading-network:
+    driver: bridge
+
+volumes:
+  mysql-treading-data:
